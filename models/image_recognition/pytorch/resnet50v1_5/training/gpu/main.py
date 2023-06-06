@@ -443,7 +443,7 @@ def main_worker(ngpus_per_node, args):
         if args.resume:
             if os.path.isfile(args.resume):
                 print("=> loading checkpoint '{}'".format(args.resume))
-                if args.gpu is None or args.xpu is None:
+                if args.gpu is None and args.xpu is None:
                     checkpoint = torch.load(args.resume)
                 elif args.gpu is not None:
                     # Map model to be loaded to specified single gpu.
@@ -451,13 +451,18 @@ def main_worker(ngpus_per_node, args):
                     checkpoint = torch.load(args.resume, map_location=loc)
                 elif args.xpu is not None:
                     # Map model to be loaded to specified single gpu.
-                    loc = 'xpu:{}'.format(args.xpu)
+                    loc = '{}'.format(args.xpu)
                     checkpoint = torch.load(args.resume, map_location=loc)
                 args.start_epoch = checkpoint['epoch']
                 best_acc1 = checkpoint['best_acc1']
                 if args.gpu is not None:
                     # best_acc1 may be from a checkpoint from a different GPU
                     best_acc1 = best_acc1.to(args.gpu)
+                
+                #TODO: best_acc1 is changed between float and tesnor on xpu in different case. why?
+                if torch.is_tensor(best_acc1):
+                    best_acc1 = best_acc1.to("cpu")
+                
                 model.load_state_dict(checkpoint['state_dict'])
                 optimizer.load_state_dict(checkpoint['optimizer'])
                 scheduler.load_state_dict(checkpoint['scheduler'])
