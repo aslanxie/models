@@ -86,7 +86,7 @@ model_names = sorted(name for name in models.__dict__
 cwd = os.path.dirname(os.path.abspath(__file__))
 hub = os.path.expanduser("~/.cache/torch/intel")
 if not os.path.exists(hub):
-    os.makedirs(hub)
+    os.makedirs(hub, exist_ok=True)
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR', nargs='?', default='imagenet',
