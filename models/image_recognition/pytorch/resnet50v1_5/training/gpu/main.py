@@ -66,7 +66,7 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.optim
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import StepLR, MultiStepLR
 import torch.multiprocessing as mp
 import torch.utils.data
 import torch.utils.data.distributed
@@ -357,7 +357,8 @@ def main_worker(ngpus_per_node, args):
                 model = torch.load(load_path)
                 optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
                                 momentum=args.momentum, weight_decay=args.weight_decay)
-                scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+                #scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+                scheduler = MultiStepLR(optimizer, milestones=[30, 60, 80], gamma=0.1, verbose=True)
         else:
             print("=> no saved model found at '{}'".format(args.load))
             sys.exit(1)
@@ -437,7 +438,8 @@ def main_worker(ngpus_per_node, args):
                 args.workers = int(args.workers / ngpus_per_node)
                 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.xpu], broadcast_buffers=args.broadcast_buffers, bucket_cap_mb=args.bucket_cap)
         """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-        scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+        #scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+        scheduler = MultiStepLR(optimizer, milestones=[30, 60, 80], gamma=0.1, verbose=True)
 
         # optionally resume from a checkpoint
         if args.resume:
