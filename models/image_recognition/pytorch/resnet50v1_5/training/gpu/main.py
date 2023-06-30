@@ -577,14 +577,15 @@ def main_worker(ngpus_per_node, args):
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
-            save_checkpoint({
-                'epoch': epoch + 1,
-                'arch': args.arch,
-                'state_dict': model.state_dict(),
-                'best_acc1': best_acc1,
-                'optimizer' : optimizer.state_dict(),
-                'scheduler' : scheduler.state_dict()
-            }, is_best)
+            if not args.dummy:
+                save_checkpoint({
+                    'epoch': epoch + 1,
+                    'arch': args.arch,
+                    'state_dict': model.state_dict(),
+                    'best_acc1': best_acc1,
+                    'optimizer' : optimizer.state_dict(),
+                    'scheduler' : scheduler.state_dict()
+                }, is_best)
 
     if args.tensorboard:
         writer.close()
@@ -714,7 +715,7 @@ def train(train_loader, model, criterion, optimizer, epoch, profiling, use_autoc
             if args.tensorboard is None:
                 sys.exit(0)
 
-    if args.tensorboard:
+    if args.tensorboard and not args.dummy:
         draw_tensorboard(epoch, losses.avg, top1.avg, top5.avg, 'train', args)
 
 def validate(val_loader, model, criterion, epoch, profiling, use_autocast, args):
